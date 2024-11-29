@@ -1,33 +1,119 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { RockPaperScissors } from "../target/types/rock_paper_scissors";
-import {testAccount} from "./test";
-
+import { convertBN, testAccount } from "./test";
+import { SYSTEM_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/native/system";
 
 describe("rock_paper_scissors", () => {
     // Configure the client to use the local cluster.
     anchor.setProvider(anchor.AnchorProvider.env());
   
-    const program = anchor.workspace.Check as Program<RockPaperScissors>;
-    const newKeyPair = anchor.web3.Keypair.fromSeed(new Uint8Array(testAccount)); 
+  const program = anchor.workspace.RockPaperScissors as Program<RockPaperScissors>;
+  const newKeyPair = anchor.web3.Keypair.fromSecretKey(new Uint8Array(testAccount));
 
-  
-    it("Is initialized!", async () => {
-      // Add your test here.
-      const [RockPaperScissorsPDA, rpsBump] = await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("game_pass"), pg.publicKey.toBuffer()],
-        program.programId
-      );
+  const pg = new anchor.web3.PublicKey(program.programId);
 
-      const tx = await program.methods.initialize(
+  // it("Is initialized!", async () => {
+  //   // Add your test here.
+  //   const [RockPaperScissorsPDA, rpsBump] = await anchor.web3.PublicKey.findProgramAddress(
+  //     [Buffer.from("gameAccount"), newKeyPair.publicKey.toBuffer()],
+  //     program.programId
+  //   );
+  //   const tx = await program.methods.initialize().accountsPartial({
+  //     gameAccount: RockPaperScissorsPDA,
+  //     signer: newKeyPair.publicKey,
+  //     systemProgram: SYSTEM_PROGRAM_ID
+  //   })
+  //     .signers([newKeyPair])
+  //   .rpc();
+  //   console.log("Your transaction signature", tx);
+  // });
 
-      ).accounts({
-        gameAccount: "",
-        signer: newKeyPair.publicKey,
+  // it("It starts a game!", async () => {
+
+  //     // Add your test here.
+  //   // const [RockPaperScissorsPDA, rpsBump] = await anchor.web3.PublicKey.findProgramAddress(
+  //   //   [Buffer.from("gameAccount"), newKeyPair.publicKey.toBuffer()],
+  //   //   program.programId
+  //   // );
+
+  //   const uniqueId = 1234567;
+  //   const uniqueIdBuffer = Buffer.alloc(8);
+  //   uniqueIdBuffer.writeUInt32LE(uniqueId, 0);
+
+  //   //gamesession pda
+  //   const [gameSesPDA, gameSesBump] = anchor.web3.PublicKey.findProgramAddressSync(
+  //     [Buffer.from("session"), newKeyPair.publicKey.toBuffer(), uniqueIdBuffer],
+  //       program.programId
+  //     );
+
+  //   // // E3jGPMt7HVcoUYuFLLJ9eYXQhCN57hgzeBa3mQLxwvvt
+  //   const tx = await program.methods.startGameSession(convertBN(uniqueId), convertBN(3)).accountsPartial({
+  //     gameSession: gameSesPDA,
+  //     signer: newKeyPair.publicKey,
+  //     systemProgram: SYSTEM_PROGRAM_ID
+  //     })
+  //     .signers([newKeyPair])
+  //     .rpc();
+  //     console.log("Your transaction signature", tx);
+
+  //   let sessionCreated = await program.account.gameSession.fetch(gameSesPDA)
+
+  //   console.log("uniqueId", sessionCreated.uniqueId.toString());
+  //   console.log("computerScore", sessionCreated.computerScore.toString());
+  //   console.log("rounds", sessionCreated.results);
+
+  //   });
+
+
+  it("It starts a game round!", async () => {
+
+    // Add your test here.
+    const [RockPaperScissorsPDA, rpsBump] = await anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from("gameAccount"), newKeyPair.publicKey.toBuffer()],
+      program.programId
+    );
+
+    const uniqueId = 1234567;
+    const uniqueIdBuffer = Buffer.alloc(8);
+    uniqueIdBuffer.writeUInt32LE(uniqueId, 0);
+
+    //gamesession pda
+    const [gameSesPDA, gameSesBump] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("session"), newKeyPair.publicKey.toBuffer(), uniqueIdBuffer],
+      program.programId
+    );
+
+    let playerChoice = 0;
+    const tx = await program.methods.startRound(convertBN(playerChoice)).accountsPartial({
+      gameSession: gameSesPDA,
+      gameAccount: RockPaperScissorsPDA,
+      signer: newKeyPair.publicKey,
+      systemProgram: SYSTEM_PROGRAM_ID
       })
+      .signers([newKeyPair])
       .rpc();
       console.log("Your transaction signature", tx);
-    });
+
+    let gamePlayed = await program.account.gameAccount.fetch(RockPaperScissorsPDA)
+    let sessionStatus = await program.account.gameSession.fetch(gameSesPDA)
+
+    //if the result has increased
+    console.log("rounds", sessionStatus.results);
+    console.log("playerScore", sessionStatus.playerScore.toString());
+    console.log("computerScore", sessionStatus.computerScore.toString());
+
+
+
+    //if the game played was recored in the gameAccount
+    console.log("totalGamesWon", gamePlayed.totalGamesWon.toString());
+    console.log("totalGamesLost", gamePlayed.totalGamesLost.toString());
+
+
+
+  });
+
+
   });
 
 

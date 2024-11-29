@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::sysvar::clock::Clock;
-declare_id!("DTsqK5TEexxgu39b3NDp5pPNrjmKKZbiiBAMtujQbCL3");
+declare_id!("CLkKr78V5MABw9kFqHSbRA9WCjbUTYFuwuGb1wC8VU7k");
 
 #[program]
 pub mod rock_paper_scissors {
@@ -13,7 +13,7 @@ pub mod rock_paper_scissors {
         Ok(())
     }
 
-    pub fn start_game_session(ctx: Context<StartGame>, round: u64, unique_id: u64) -> Result<()> {
+    pub fn start_game_session(ctx: Context<StartGame>,unique_id: u64, round: u64, ) -> Result<()> {
         ctx.accounts.game_session.unique_id = unique_id;
         ctx.accounts.game_session.round = round;
         ctx.accounts.game_session.results = Vec::new();
@@ -99,7 +99,7 @@ pub struct StartGame<'info> {
         init,
         seeds = [b"session", signer.key().as_ref(), &unique_id.to_le_bytes()],
         payer = signer,
-        space = 8 + 8 + 8 + (8 * 4) ,
+        space = 8 + 8 + 8 +80 ,
         bump
     )]
     pub game_session: Account<'info, GameSession>,
@@ -124,11 +124,11 @@ pub struct StartRound<'info> {
 
 #[account]
 pub struct GameSession {
-    unique_id: u64,
-    round: u64,
-    results: Vec<Round>,
-    player_score: u8,
-    computer_score: u8,
+    unique_id: u64, //8
+    round: u64, //8
+    results: Vec<Round>, //16 * 3
+    player_score: u8, //4
+    computer_score: u8, //4 + 8
 }
 
 #[account]
